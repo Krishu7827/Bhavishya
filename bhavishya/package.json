@@ -1,0 +1,29 @@
+{
+  "name": "future-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CLI tool for model marketplace with gateway routing",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:cli": "npm run build --workspace=@future/cli",
+    "build:shared": "npm run build --workspace=@future/shared",
+    "build:backend": "npm run build --workspace=@future/backend",
+    "dev:backend": "npm run dev --workspace=@future/backend",
+    "start:backend": "npm run start --workspace=@future/backend",
+    "db:generate": "npm run db:generate --workspace=@future/backend",
+    "db:migrate": "npm run db:migrate --workspace=@future/backend",
+    "db:studio": "npm run db:studio --workspace=@future/backend",
+    "lint": "npm run lint --workspaces",
+    "clean": "rm -rf packages/*/dist apps/*/dist node_modules packages/*/node_modules apps/*/node_modules"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

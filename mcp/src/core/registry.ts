@@ -21,6 +21,7 @@ export interface Agent {
   updated_at?: string;
 }
 
+
 export interface AgentWithScore extends Agent {
   score: number;
 }

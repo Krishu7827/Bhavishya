@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Publisher - represents a model publisher who authenticates via Google OAuth
+// ============================================================================
+model Publisher {
+  id        String   @id @default(cuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  models          Model[]
+  sessions        Session[]
+  refreshTokens   RefreshToken[]
+  oneTimeCodes    OneTimeCode[]
+
+  @@index([googleId])
+  @@index([email])
+  @@map("publishers")
+}
+
+// ============================================================================
+// Model - represents a published AI model endpoint
+// ============================================================================
+model Model {
+  id             String   @id @default(cuid())
+  publisherId    String
+  name           String
+  description    String
+  baseUrl        String
+  encryptedApiKey String // AES-256-GCM encrypted, never returned in API responses
+  tags           String[]
+  contextWindow  Int
+  pricingNotes   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  sessions  Session[]
+
+  @@index([publisherId])
+  @@index([tags])
+  @@map("models")
+}
+
+// ============================================================================
+// Session - represents a short-lived gateway session for end users
+// ============================================================================
+model Session {
+  id         String   @id @default(cuid())
+  publisherId String?
+  modelId    String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  // Relations
+  publisher Publisher? @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  model     Model      @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([publisherId])
+  @@index([modelId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ============================================================================
+// Usage (optional - for billing/analytics, can be added later)
+// ============================================================================
+// model Usage {
+//   id        String   @id @default(cuid())
+//   sessionId String
+//   tokensIn  Int
+//   tokensOut Int
+//   timestamp DateTime @default(now())
+//
+//   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+//
+//   @@index([sessionId])
+//   @@index([timestamp])
+//   @@map("usage")
+// }
+
+// ============================================================================
+// RefreshToken - for JWT refresh token management
+// ============================================================================
+model RefreshToken {
+  id          String   @id @default(cuid())
+  publisherId String
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  revoked     Boolean  @default(false)
+
+  // Relations
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+
+  @@index([publisherId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ============================================================================
+// OAuthState - stores PKCE code_verifier during OAuth flow
+// ============================================================================
+model OAuthState {
+  id             String   @id @default(cuid())
+  state          String   @unique
+  codeChallenge  String   // CLI's code challenge (SHA256 of verifier)
+  redirectUri    String
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  @@index([state])
+  @@index([expiresAt])
+  @@map("oauth_states")
+}
+
+// ============================================================================
+// OneTimeCode - temporary code exchanged for JWT tokens
+// ============================================================================
+model OneTimeCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  publisherId String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  used        Boolean  @default(false)
+
+  // Relations
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([expiresAt])
+  @@map("one_time_codes")
+}

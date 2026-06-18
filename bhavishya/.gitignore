@@ -2,8 +2,6 @@
 node_modules/
 .pnp
 .pnp.js
-package-lock.json
-yarn.lock
 
 # Build outputs
 dist/
@@ -11,7 +9,6 @@ build/
 .next/
 out/
 *.tsbuildinfo
-.npm
 
 # Environment files
 .env
@@ -32,8 +29,6 @@ lerna-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
-.Spotlight-V100
-.Trashes
 
 # IDE
 .idea/
@@ -45,46 +40,19 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
-test-results/
 
 # Credentials and secrets
 *.pem
 *.key
 credentials.json
 cdp_api_key.json
-*.p8
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Temporary files
+# Misc
 .cache/
 .temp/
 .tmp/
-*.tmp
-
-# Compiled files
-*.js.map
-*.d.ts.map
-
-# Large media files
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.iso
-
-# Archives
-*.zip
-*.tar.gz
-*.rar
-*.7z
-
-# Misc
-.vercel
-.serverless
-.dynamodb
-.graphqlconfig
-.graphcool-state
