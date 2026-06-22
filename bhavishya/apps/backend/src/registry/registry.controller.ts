@@ -25,7 +25,11 @@ class CreateModelDto {
   @IsNotEmpty()
   description: string;
 
-  @IsUrl()
+  @IsUrl({ 
+    protocols: ['https'],
+    require_protocol: true,
+    require_tld: false
+  })
   baseUrl: string;
 
   @IsString()
@@ -80,16 +84,27 @@ export class RegistryController {
    */
   @Post()
   async create(@Req() req: Request, @Body() dto: CreateModelDto) {
-    const publisher = req.user as { id: string };
-    return this.registry.createModel(publisher.id, {
-      name: dto.name,
-      description: dto.description,
-      baseUrl: dto.baseUrl,
-      apiKey: dto.apiKey,
-      tags: dto.tags,
-      contextWindow: dto.contextWindow,
-      pricingNotes: dto.pricingNotes,
-    });
+    try {
+      const publisher = req.user as { id: string };
+      console.log('[DEBUG] Creating model for publisher:', publisher);
+      console.log('[DEBUG] Request body:', dto);
+      
+      const result = await this.registry.createModel(publisher.id, {
+        name: dto.name,
+        description: dto.description,
+        baseUrl: dto.baseUrl,
+        apiKey: dto.apiKey,
+        tags: dto.tags,
+        contextWindow: dto.contextWindow,
+        pricingNotes: dto.pricingNotes,
+      });
+      
+      console.log('[DEBUG] Model created successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('[ERROR] Failed to create model:', error);
+      throw error;
+    }
   }
 
   /**

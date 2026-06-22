@@ -111,7 +111,7 @@ export const publishCommand = new Command('publish')
       return;
     }
 
-    const result = await response.json();
+    const result = await response.json() as any;
     console.log('✅ Model published successfully!\n');
     console.log(`   Model ID: ${result.id}`);
     console.log(`   Name: ${result.name}`);

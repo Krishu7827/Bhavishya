@@ -18,35 +18,35 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     ]);
 
     if (isPublic) {
-      // For public routes, still try to authenticate if token is present
+      // For public routes, allow access without authentication
       const request = context.switchToHttp().getRequest();
       const authHeader = request.headers.authorization;
       
-      if (authHeader) {
-        // Token present, try to validate it
-        return super.canActivate(context) as Promise<boolean>;
+      if (!authHeader) {
+        // No token present, allow without user
+        return true;
       }
       
-      // No token, allow access without user
-      return true;
+      // Token present but public route - set flag for handleRequest
+      (request as any).isPublicRoute = true;
     }
 
     return super.canActivate(context);
   }
 
-  handleRequest(err: Error | null, user: any) {
-    // For public routes, don't throw error if no user
-    const request = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      arguments[0]?.constructor,
-    ]);
+  handleRequest(err: Error | null, user: any, _info: any, context: any) {
+    // Check if this is a public route (set in canActivate)
+    const request = context?.switchToHttp?.()?.getRequest?.() || {};
+    const isPublic = (request as any).isPublicRoute;
     
-    if (request) {
+    if (isPublic) {
       return user || null; // Allow null user for public routes
     }
     
     if (err || !user) {
       throw err || new UnauthorizedException('Not authenticated');
     }
+    
     return user;
   }
 }
