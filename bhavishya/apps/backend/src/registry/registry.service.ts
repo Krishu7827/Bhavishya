@@ -20,37 +20,47 @@ export class RegistryService {
    * Create a new model listing
    */
   async createModel(publisherId: string, data: CreateModelPayload) {
-    // Check model limit
-    const existingCount = await this.prisma.model.count({
-      where: { publisherId },
-    });
+    try {
+      // Check model limit
+      const existingCount = await this.prisma.model.count({
+        where: { publisherId },
+      });
 
-    if (existingCount >= MAX_MODELS_PER_PUBLISHER) {
+      if (existingCount >= MAX_MODELS_PER_PUBLISHER) {
+        throw new BadRequestException(
+          `Maximum ${MAX_MODELS_PER_PUBLISHER} models allowed per publisher`,
+        );
+      }
+
+      // Validate baseUrl (basic check for private IPs)
+      this.validateBaseUrl(data.baseUrl);
+
+      // Encrypt API key
+      const encryptedApiKey = this.encryption.encrypt(data.apiKey);
+
+      const model = await this.prisma.model.create({
+        data: {
+          publisherId,
+          name: data.name,
+          description: data.description,
+          baseUrl: data.baseUrl,
+          encryptedApiKey,
+          tags: data.tags,
+          contextWindow: data.contextWindow,
+          pricingNotes: data.pricingNotes,
+        },
+      });
+
+      return this.toPublisherModel(model);
+    } catch (error) {
+      console.error('Error creating model:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       throw new BadRequestException(
-        `Maximum ${MAX_MODELS_PER_PUBLISHER} models allowed per publisher`,
+        `Failed to create model: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
-
-    // Validate baseUrl (basic check for private IPs)
-    this.validateBaseUrl(data.baseUrl);
-
-    // Encrypt API key
-    const encryptedApiKey = this.encryption.encrypt(data.apiKey);
-
-    const model = await this.prisma.model.create({
-      data: {
-        publisherId,
-        name: data.name,
-        description: data.description,
-        baseUrl: data.baseUrl,
-        encryptedApiKey,
-        tags: data.tags,
-        contextWindow: data.contextWindow,
-        pricingNotes: data.pricingNotes,
-      },
-    });
-
-    return this.toPublisherModel(model);
   }
 
   /**
